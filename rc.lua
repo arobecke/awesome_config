@@ -59,7 +59,7 @@ for s = 1, screen.count() do
       -- 0,"?","'","←"
       tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "?","'","←"}, s, layouts[2])
     else
-      tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6, 7, 8, 9}, s, layouts[2])
+      tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "?","'","←"}, s, layouts[2])
     end
 end
 -- }}}
@@ -354,6 +354,7 @@ awful.rules.rules = {
     { rule = { class = "Gnome-panel" }, properties = { ontop = true } },
     { rule = { class = "Mate-panel" }, properties = { ontop = true, focusable = false } },
     { rule = { class = "epiphany" }, properties = { floating = false } },
+  { rule = { name = "Slack Call Minipanel" }, properties = { floating = true, ontop = true } },
     -- Set Firefox to always map on tags number 2 of screen 1.
     -- { rule = { class = "Firefox" },
     --   properties = { tag = tags[1][2] } },
@@ -367,11 +368,27 @@ client.connect_signal("manage", function (c, startup)
     -- awful.titlebar.add(c, { modkey = modkey })
 
     -- Enable sloppy focus
+    -- c:connect_signal("mouse::enter", function(c)
+        -- if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+            -- and awful.client.focus.filter(c) then
+            -- client.focus = c
+        --end
+    --end)
+    -- Enable sloppy focus (without defocusing IntelliJ dialogs)
     c:connect_signal("mouse::enter", function(c)
-        if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
-            and awful.client.focus.filter(c) then
-            client.focus = c
-        end
+      local focused = client.focus
+      if focused 
+        and focused.class == c.class
+        and focused.instance == "sun-awt-X11-XDialogPeer"
+        and c.instance == "sun-awt-X11-XFramePeer"
+      then	
+        return
+      end
+
+      if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+        and awful.client.focus.filter(c) then
+        client.focus = c
+    end
     end)
 
     c:connect_signal("property::urgent", function(c)
